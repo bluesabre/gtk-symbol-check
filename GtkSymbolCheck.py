@@ -208,21 +208,21 @@ class GtkSymbolListing():
             # Check if available.
             result = symbol.check_version(major_version, minor_version)
             if result == -1:
-                print (("Symbol [%s] was introduced in GTK %s" %
+                print (("%s was introduced in GTK %s" %
                         (symbol_name, str(symbol.get_min()))))
                 return False
 
             # Check if deprecated
             elif result == 1:
-                print(("Symbol [%s] has been deprecated since GTK %s" %
+                print(("%s has been deprecated since GTK %s" %
                        (symbol_name, str(symbol.get_max()))))
                 return False
 
             return True
         except Exception:
             if hide_not_found:
-                return False
-            print(("Symbol [%s] was not found in the API documents" %
+                return True
+            print(("%s was not found in the API documents" %
                     symbol_name))
             return False
 
@@ -262,7 +262,9 @@ def parse_c_file(filename):
     #print(("Processing: %s" % filename))
     symbols = list()
     with open(filename, 'r') as open_file:
+        count = 0
         for line in open_file.readlines():
+            count += 1
             line = line.strip()
             if line.startswith("#if") or \
                     line.startswith("#else") or \
@@ -288,7 +290,7 @@ def parse_c_file(filename):
                             if item.startswith(library):
                                 symbol = item
                                 if symbol not in symbols:
-                                    symbols.append(symbol)
+                                    symbols.append((symbol, count))
     #print(("... found %i symbols." % len(symbols)))
     return symbols
 
@@ -297,26 +299,30 @@ def parse_glade_file(filename):
     """Parse a glade file and return a list of the found symbols."""
     symbols = list()
     with open(filename, 'r') as open_file:
+        count = 0
         for line in open_file.readlines():
+            count += 1
             if "object class" in line:
                 symbol = line.split('"')[1].split('"')[0]
                 if symbol not in symbols:
-                    symbols.append(symbol)
+                    symbols.append((symbol, count))
     return symbols
 
 
 def get_symbols(source_dir):
     """Retrieve the list of symbols from the source directory."""
-    symbols = list()
+    symbols = dict()
     for filename in get_filenames(source_dir):
         if filename.endswith('.c') or filename.endswith('.h'):
-            for symbol in parse_c_file(filename):
-                if symbol not in symbols:
-                    symbols.append(symbol)
+            for symbol, line in parse_c_file(filename):
+                if symbol not in symbols.keys():
+                    symbols[symbol] = list()
+                symbols[symbol].append((filename, line))
         elif filename.endswith('.glade') or filename.endswith('.ui'):
-            for symbol in parse_glade_file(filename):
-                if symbol not in symbols:
-                    symbols.append(symbol)
+            for symbol, line in parse_glade_file(filename):
+                if symbol not in symbols.keys():
+                    symbols[symbol] = list()
+                symbols[symbol].append((filename, line))
     return symbols
 
 
@@ -344,6 +350,19 @@ if __name__ == "__main__":
 
     listing = GtkSymbolListing()
 
-    for symbol in get_symbols(args.source_dir):
-        listing.check_available_symbol(symbol,
+    symbols = get_symbols(args.source_dir)
+    keys = list(symbols.keys())
+    keys.sort()
+
+    count = 0
+    for symbol in keys:
+        found = listing.check_available_symbol(symbol,
                                        gtk_major_version, gtk_minor_version)
+        if not found:
+            symbols[symbol].sort()
+            for filename, line in symbols[symbol]:
+                print("    %s:%i" % (filename, line))
+                count += 1
+            print("")
+
+    print ("%i affected lines" % count)
