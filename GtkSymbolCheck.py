@@ -5,16 +5,16 @@ import urllib.request
 
 import argparse
 
-MIN_GTK_VERSION = "3.12.0"
+MIN_GTK_VERSION = "3.14.0"
 gtk_major_version = 3
-gtk_minor_version = 12
+gtk_minor_version = 14
 hide_not_found = False
 
 
 class GtkSymbol():
     """GtkSymbol class that stores name, min, and max versions."""
     def __init__(self, name, min_version=(3, 0),
-                max_version=(3, 12)):
+                max_version=(3, 14)):
         self.symbol_name = name
         self.minimum_gtk_version = min_version
         self.maximum_gtk_version = max_version
@@ -57,7 +57,7 @@ class GtkSymbolListing():
         self.source_dir = os.getcwd()
         while True:
             major, minor = self.check_api_versions()
-            if minor > 12:
+            if minor > 14:
                 break
             else:
                 if not self.get_api_documents(major, minor):
@@ -69,7 +69,7 @@ class GtkSymbolListing():
         Return earliest needed version."""
         version_major = 3
         version_minor = 0
-        while version_minor <= 12:
+        while version_minor <= 14:
             for filename in ['api-index-full.html',
                              'api-index-deprecated.html',
                              'gtkobjects.html']:
@@ -139,7 +139,7 @@ class GtkSymbolListing():
         version_major = 3
         version_minor = 0
         symbol_dict = dict()
-        while version_minor <= 12:
+        while version_minor <= 14:
             version_key = "%i.%i" % (version_major, version_minor)
             filename = os.path.join(self.source_dir,
                                     "developer.gnome.org/gtk3/%s/%s" %
@@ -156,7 +156,7 @@ class GtkSymbolListing():
         version_major = 3
         version_minor = 0
         symbol_dict = dict()
-        while version_minor <= 12:
+        while version_minor <= 14:
             version_key = "%i.%i" % (version_major, version_minor)
             filename = os.path.join(self.source_dir,
                                     "developer.gnome.org/gtk3/%s/%s" %
@@ -176,18 +176,18 @@ class GtkSymbolListing():
 
         version_major = 3
         version_minor = 0
-        while version_minor <= 12:
+        while version_minor <= 14:
             version_key = "%i.%i" % (version_major, version_minor)
             for symbol in available[version_key]:
                 if symbol not in list(symbols.keys()):
                     symbols[symbol] = GtkSymbol(symbol,
                                         (version_major, version_minor),
-                                        (3, 12))
+                                        (3, 14))
             version_minor += 2
 
         version_major = 3
-        version_minor = 12
-        while version_minor <= 12 and version_minor >= 0:
+        version_minor = 14
+        while version_minor <= 14 and version_minor >= 0:
             version_key = "%i.%i" % (version_major, version_minor)
             for symbol in deprecated[version_key]:
                 if symbol in list(symbols.keys()):
